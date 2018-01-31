@@ -40,13 +40,28 @@ public class BeatBoxFragment extends Fragment {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        // unload the sounds when the activity is destroyed
+        mBeatBox.release();
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // this retains a fragment when it would normally be destroyed (suchas on screen rotation).
+        // We use this here because BeatBox is not stashable in the Bundle; it will always get
+        // interrupted on creen rotation because the fragment holding it is destroyed and recreated.
+        // setRetainInstance(true) avoid this and retains the fragment instance AND all instance variables
+        // associated with the fragment.
+        setRetainInstance(true);
 
         mBeatBox = new BeatBox(getActivity());
     }
 
-    private class SoundHolder extends RecyclerView.ViewHolder {
+    private class SoundHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private Button mButton;
         private Sound mSound;
 
@@ -54,6 +69,7 @@ public class BeatBoxFragment extends Fragment {
             super(inflater.inflate(R.layout.list_item_sound, container, false));
 
             mButton = (Button) itemView.findViewById(R.id.list_item_sound_button);
+            mButton.setOnClickListener(this);
         }
 
         public void bindSound(Sound sound) {
@@ -61,6 +77,10 @@ public class BeatBoxFragment extends Fragment {
             mButton.setText(mSound.getName());
         }
 
+        @Override
+        public void onClick(View view) {
+            mBeatBox.play(mSound);
+        }
     }
 
     private class SoundAdapter extends RecyclerView.Adapter<SoundHolder> {
